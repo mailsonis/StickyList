@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useRef, useTransition } from "react";
+import { useState, useRef, useTransition, useCallback } from "react";
 import type { ShoppingList, ShoppingItem } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, Trash2, Sparkles, Loader2, Check, X, Pencil, Share2 } from "lucide-react";
+import { toPng } from 'html-to-image';
+import { ShoppingListExport } from "./shopping-list-export";
 
 import {
   Card,
@@ -67,8 +69,11 @@ export function ShoppingListCard({
 }: ShoppingListCardProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isPending, startTransition] = useTransition();
+  const [isSuggesting, startSuggestionTransition] = useTransition();
+  const [isExporting, startExportTransition] = useTransition();
   const { toast } = useToast();
+  const exportRef = useRef<HTMLDivElement>(null);
+
 
   const form = useForm({
     resolver: zodResolver(itemFormSchema),
@@ -91,7 +96,7 @@ export function ShoppingListCard({
   };
 
   const handleGetSuggestions = () => {
-    startTransition(async () => {
+    startSuggestionTransition(async () => {
       const result = await getSuggestions({ listName: list.name, pastPurchases: allPurchases });
       if (result.length > 0) {
         setSuggestions(result);
@@ -104,7 +109,35 @@ export function ShoppingListCard({
     });
   };
 
+  const handleExport = useCallback(() => {
+    if (exportRef.current === null) {
+      return
+    }
+    startExportTransition(async () => {
+      try {
+        const dataUrl = await toPng(exportRef.current!, { cacheBust: true, });
+        const link = document.createElement('a');
+        link.download = `${list.name.replace(/ /g, '_')}.png`;
+        link.href = dataUrl;
+        link.click();
+      } catch (err) {
+        console.error(err);
+        toast({
+            variant: "destructive",
+            title: "Uh oh! Algo deu errado.",
+            description: "Não foi possível exportar a lista como imagem.",
+        })
+      }
+    })
+  }, [exportRef, list.name, toast]);
+
   return (
+    <>
+    <div className="hidden">
+      <div ref={exportRef}>
+        <ShoppingListExport list={list} />
+      </div>
+    </div>
     <Card
       className="flex flex-col h-full shadow-lg border-2 border-black/5 transition-all duration-300 ease-in-out hover:shadow-2xl hover:scale-105 hover:!rotate-0"
       style={{
@@ -224,9 +257,9 @@ export function ShoppingListCard({
               variant="outline"
               className="w-full bg-background/50"
               onClick={handleGetSuggestions}
-              disabled={isPending}
+              disabled={isSuggesting}
             >
-              {isPending ? (
+              {isSuggesting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Sparkles className="mr-2 h-4 w-4" />
@@ -259,12 +292,13 @@ export function ShoppingListCard({
             </div>
           </PopoverContent>
         </Popover>
-        <Button variant="outline" className="bg-background/50" onClick={() => toast({ title: "Função não implementada", description: "A exportação de listas será adicionada em breve!" })}>
-            <Share2 className="mr-2 h-4 w-4" />
+        <Button variant="outline" className="bg-background/50" onClick={handleExport} disabled={isExporting}>
+             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
             Exportar
         </Button>
         </div>
       </CardFooter>
     </Card>
+    </>
   );
 }
