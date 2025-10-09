@@ -120,7 +120,13 @@ export function ShoppingListCard({
     }
     startExportTransition(async () => {
       try {
-        const dataUrl = await toPng(exportRef.current!, { cacheBust: true, filter });
+        const fontCss = await fetch('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap').then(res => res.text());
+
+        const dataUrl = await toPng(exportRef.current!, { 
+            cacheBust: true, 
+            filter,
+            fontEmbedCSS: fontCss
+        });
         
         const link = document.createElement('a');
         link.download = `${list.name.replace(/ /g, '_')}.png`;
@@ -308,5 +314,3 @@ export function ShoppingListCard({
     </>
   );
 }
-
-    
