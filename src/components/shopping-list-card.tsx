@@ -108,6 +108,11 @@ export function ShoppingListCard({
       }
     });
   };
+  
+  const filter = (node: HTMLElement) => {
+    const exclusionClasses = ['hidden'];
+    return !exclusionClasses.some((classname) => node.classList?.contains(classname));
+  }
 
   const handleExport = useCallback(() => {
     if (exportRef.current === null) {
@@ -115,7 +120,7 @@ export function ShoppingListCard({
     }
     startExportTransition(async () => {
       try {
-        const dataUrl = await toPng(exportRef.current!, { cacheBust: true, });
+        const dataUrl = await toPng(exportRef.current!, { cacheBust: true, filter });
         const link = document.createElement('a');
         link.download = `${list.name.replace(/ /g, '_')}.png`;
         link.href = dataUrl;
