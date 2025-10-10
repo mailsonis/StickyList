@@ -16,7 +16,7 @@ export function ShoppingListExport({ list }: ShoppingListExportProps) {
                 width: '400px', 
             }}
         >
-            <h2 className="text-4xl font-bold mb-8 break-words">{list.name}</h2>
+            <h2 className="text-4xl font-bold mb-12 break-words">{list.name}</h2>
             <ul className="space-y-4">
                 {list.items.map((item) => (
                     <li key={item.id} className="flex items-center gap-3">
