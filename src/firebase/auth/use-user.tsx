@@ -10,7 +10,8 @@ import {
     signOut as firebaseSignOut,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    updateProfile
+    updateProfile,
+    sendPasswordResetEmail
 } from "firebase/auth";
 import { auth } from ".."; // Import auth from your firebase index
 
@@ -80,6 +81,15 @@ export const signInWithEmail = async (email: string, password: string) => {
         await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
         console.error("Error signing in with email: ", error);
+        throw error;
+    }
+};
+
+export const sendPasswordReset = async (email: string) => {
+    try {
+        await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+        console.error("Error sending password reset email: ", error);
         throw error;
     }
 };

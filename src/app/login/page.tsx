@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { useUser, signInWithEmail, signUpWithEmail } from '@/firebase/auth/use-user';
+import { useUser, signInWithEmail, signUpWithEmail, sendPasswordReset } from '@/firebase/auth/use-user';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const formSchema = z.object({
   name: z.string().optional(),
@@ -28,6 +29,9 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
 
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
@@ -83,6 +87,33 @@ export default function LoginPage() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!resetEmail) {
+        toast({
+            variant: 'destructive',
+            title: 'Email inválido',
+            description: 'Por favor, insira um email válido para redefinir a senha.',
+        });
+        return;
+    }
+    setIsResettingPassword(true);
+    try {
+        await sendPasswordReset(resetEmail);
+        toast({
+            title: 'Email de redefinição enviado',
+            description: 'Verifique sua caixa de entrada para as instruções.',
+        });
+    } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Falha ao enviar email',
+            description: 'Não foi possível enviar o email de redefinição. Verifique o email e tente novamente.',
+        });
+    } finally {
+        setIsResettingPassword(false);
+    }
+};
+
 
   if (loading || user) {
     return (
@@ -115,7 +146,7 @@ export default function LoginPage() {
                         <FormItem>
                         <FormLabel>Nome</FormLabel>
                         <FormControl>
-                            <Input placeholder="Seu nome completo" {...field} />
+                            <Input placeholder="Seu nome completo" {...field} className="border-foreground/20 focus:border-primary border-2"/>
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -129,7 +160,7 @@ export default function LoginPage() {
                     <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                        <Input type="email" placeholder="seu@email.com" {...field} />
+                        <Input type="email" placeholder="seu@email.com" {...field} className="border-foreground/20 focus:border-primary border-2"/>
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -142,7 +173,7 @@ export default function LoginPage() {
                     <FormItem>
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input type="password" placeholder="••••••••" {...field} className="border-foreground/20 focus:border-primary border-2"/>
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -153,6 +184,38 @@ export default function LoginPage() {
             </Button>
             </form>
         </Form>
+
+        {!isSigningUp && (
+            <div className="mt-4 text-center text-sm">
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="link">Esqueceu sua senha?</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Redefinir Senha</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Digite seu email para receber um link de redefinição de senha.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <Input
+                            type="email"
+                            placeholder="seu@email.com"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            className="border-foreground/20 focus:border-primary border-2"
+                        />
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={handlePasswordReset} disabled={isResettingPassword}>
+                                {isResettingPassword ? <Loader2 className="animate-spin" /> : 'Enviar'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        )}
+
         <div className="mt-6 text-center text-sm">
           <p className="text-muted-foreground">
             {isSigningUp ? 'Já tem uma conta?' : 'Ainda não tem uma conta?'}
