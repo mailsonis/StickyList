@@ -1,0 +1,22 @@
+{
+  "name": "StickyList",
+  "short_name": "StickyList",
+  "description": "Sua lista de compras inteligente e divertida!",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#FFF8C6",
+  "background_color": "#F9F9F9",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}
