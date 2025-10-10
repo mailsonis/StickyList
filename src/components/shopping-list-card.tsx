@@ -119,11 +119,12 @@ export function ShoppingListCard({
     })
   }, [exportRef, list.name, toast]);
 
-  const formattedDate = new Date(list.createdAt).toLocaleDateString('pt-BR', {
+  const formattedDate = list.createdAt ? (list.createdAt as any).toDate().toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  });
+  }) : '';
+
 
   return (
     <>

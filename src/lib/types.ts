@@ -1,3 +1,5 @@
+import type { Timestamp } from "firebase/firestore";
+
 export type ShoppingItem = {
   id: string;
   name: string;
@@ -10,5 +12,5 @@ export type ShoppingList = {
   color: string;
   items: ShoppingItem[];
   rotation: number;
-  createdAt: string;
+  createdAt: Timestamp | { toDate: () => Date };
 };

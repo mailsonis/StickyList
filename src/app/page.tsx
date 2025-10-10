@@ -1,131 +1,102 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, Loader2 } from "lucide-react";
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from "firebase/firestore";
+
 import type { ShoppingList, ShoppingItem } from "@/lib/types";
-import { Plus } from "lucide-react";
+import { useUser } from "@/firebase/auth/use-user";
+import { useFirestore, useCollection } from "@/firebase/firestore/use-collection";
 
 import { AppHeader } from "@/components/header";
 import { ShoppingListCard } from "@/components/shopping-list-card";
 import { NewListDialog } from "@/components/new-list-dialog";
 import { Button } from "@/components/ui/button";
 
-const initialLists: ShoppingList[] = [
-  {
-    id: "1",
-    name: "Compras da Semana",
-    color: "#FFF8C6",
-    items: [
-      { id: "1-1", name: "Leite", completed: true },
-      { id: "1-2", name: "Pão", completed: false },
-      { id: "1-3", name: "Ovos", completed: false },
-      { id: "1-4", name: "Frutas", completed: false },
-    ],
-    rotation: 1.5,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Churrasco Fim de Semana",
-    color: "#D9E8FF",
-    items: [
-      { id: "2-1", name: "Picanha", completed: false },
-      { id: "2-2", name: "Linguiça", completed: false },
-      { id: "2-3", name: "Pão de alho", completed: true },
-      { id: "2-4", name: "Carvão", completed: true },
-      { id: "2-5", name: "Cerveja", completed: false },
-    ],
-    rotation: -1,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "3",
-    name: "Material Escritório",
-    color: "#D9FFD9",
-    items: [
-      { id: "3-1", name: "Canetas", completed: false },
-      { id: "3-2", name: "Post-its", completed: false },
-    ],
-    rotation: 1,
-    createdAt: new Date().toISOString(),
-  },
-];
-
-
 export default function Home() {
-  const [lists, setLists] = useState<ShoppingList[]>([]);
+  const { user, loading: userLoading } = useUser();
+  const router = useRouter();
+  const firestore = useFirestore();
+
   const [isClient, setIsClient] = useState(false);
+
+  const listsQuery = user && firestore ? query(collection(firestore, `users/${user.uid}/lists`), orderBy("createdAt", "desc")) : null;
+  const { data: lists, loading: listsLoading } = useCollection<ShoppingList>(listsQuery);
 
   useEffect(() => {
     setIsClient(true);
-    // For demo, let's add createdAt to initial lists if they don't have it.
-    setLists(initialLists.map(l => ({...l, createdAt: l.createdAt || new Date().toISOString() })));
-  }, []);
+    if (!user && !userLoading) {
+      router.push("/login");
+    }
+  }, [user, userLoading, router]);
 
-  const addList = (name: string, color: string) => {
-    const newList: ShoppingList = {
-      id: `list-${Date.now()}`,
+  const addList = async (name: string, color: string) => {
+    if (!user || !firestore) return;
+    const newList = {
       name,
       color,
       items: [],
       rotation: Math.random() * 4 - 2, // -2 to 2 degrees
-      createdAt: new Date().toISOString(),
+      createdAt: serverTimestamp(),
     };
-    setLists((prev) => [...prev, newList]);
+    await addDoc(collection(firestore, `users/${user.uid}/lists`), newList);
   };
 
-  const deleteList = (listId: string) => {
-    setLists((prev) => prev.filter((list) => list.id !== listId));
+  const deleteList = async (listId: string) => {
+    if (!user || !firestore) return;
+    await deleteDoc(doc(firestore, `users/${user.uid}/lists`, listId));
   };
   
-  const updateListName = (listId: string, newName: string) => {
-    setLists(prev => prev.map(list => 
-      list.id === listId ? { ...list, name: newName } : list
-    ));
+  const updateListName = async (listId: string, newName: string) => {
+    if (!user || !firestore) return;
+    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { name: newName });
   };
 
-  const addItem = (listId: string, itemName: string) => {
-    if (!itemName.trim()) return;
+  const addItem = async (listId: string, itemName: string) => {
+    if (!itemName.trim() || !user || !firestore || !lists) return;
+    
+    const list = lists.find(l => l.id === listId);
+    if (!list) return;
+
     const newItem: ShoppingItem = {
       id: `item-${Date.now()}`,
       name: itemName,
       completed: false,
     };
-    setLists((prev) =>
-      prev.map((list) =>
-        list.id === listId ? { ...list, items: [...list.items, newItem] } : list
-      )
-    );
+    
+    const updatedItems = [...list.items, newItem];
+    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { items: updatedItems });
   };
 
-  const deleteItem = (listId: string, itemId: string) => {
-    setLists((prev) =>
-      prev.map((list) =>
-        list.id === listId
-          ? { ...list, items: list.items.filter((item) => item.id !== itemId) }
-          : list
-      )
-    );
+  const deleteItem = async (listId: string, itemId: string) => {
+    if (!user || !firestore || !lists) return;
+    const list = lists.find(l => l.id === listId);
+    if (!list) return;
+
+    const updatedItems = list.items.filter((item) => item.id !== itemId);
+    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { items: updatedItems });
   };
 
-  const toggleItem = (listId: string, itemId: string) => {
-    setLists((prev) =>
-      prev.map((list) =>
-        list.id === listId
-          ? {
-              ...list,
-              items: list.items.map((item) =>
-                item.id === itemId
-                  ? { ...item, completed: !item.completed }
-                  : item
-              ),
-            }
-          : list
-      )
+  const toggleItem = async (listId: string, itemId: string) => {
+    if (!user || !firestore || !lists) return;
+    const list = lists.find(l => l.id === listId);
+    if (!list) return;
+    
+    const updatedItems = list.items.map((item) =>
+      item.id === itemId
+        ? { ...item, completed: !item.completed }
+        : item
     );
+    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { items: updatedItems });
   };
 
-  if (!isClient) {
-    return null;
+  if (!isClient || userLoading || !user) {
+    return (
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -144,7 +115,15 @@ export default function Home() {
           </NewListDialog>
         </div>
 
-        {lists.length > 0 ? (
+        {listsLoading && (
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-gray-200 rounded-lg h-96 animate-pulse"></div>
+            ))}
+          </div>
+        )}
+
+        {!listsLoading && lists && lists.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {lists.map((list) => (
               <ShoppingListCard
@@ -159,24 +138,26 @@ export default function Home() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 border-2 border-dashed rounded-xl">
-            <h2 className="text-2xl text-muted-foreground mb-4">
-              Nenhuma lista por aqui!
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Que tal criar sua primeira lista de compras?
-            </p>
-            <NewListDialog onListCreate={addList}>
-              <Button size="lg">
-                <Plus className="mr-2 h-5 w-5" />
-                Criar sua Primeira Lista
-              </Button>
-            </NewListDialog>
-          </div>
+          !listsLoading && (
+            <div className="text-center py-20 border-2 border-dashed rounded-xl">
+              <h2 className="text-2xl text-muted-foreground mb-4">
+                Nenhuma lista por aqui!
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Que tal criar sua primeira lista de compras?
+              </p>
+              <NewListDialog onListCreate={addList}>
+                <Button size="lg">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Criar sua Primeira Lista
+                </Button>
+              </NewListDialog>
+            </div>
+          )
         )}
       </main>
       <footer className="text-center p-4 text-muted-foreground text-sm">
-        <p>Feito com ❤️ por StickyList</p>
+        <p>Feito com ❤️ por MailsonRG</p>
       </footer>
     </div>
   );
