@@ -145,7 +145,7 @@ export function ShoppingListCard({
 
   return (
     <>
-    <div className="hidden">
+    <div className="absolute -left-[9999px] -top-[9999px]">
       <div ref={exportRef}>
         <ShoppingListExport list={list} />
       </div>
