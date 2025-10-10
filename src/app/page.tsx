@@ -21,6 +21,7 @@ const initialLists: ShoppingList[] = [
       { id: "1-4", name: "Frutas", completed: false },
     ],
     rotation: 1.5,
+    createdAt: new Date().toISOString(),
   },
   {
     id: "2",
@@ -34,6 +35,7 @@ const initialLists: ShoppingList[] = [
       { id: "2-5", name: "Cerveja", completed: false },
     ],
     rotation: -1,
+    createdAt: new Date().toISOString(),
   },
   {
     id: "3",
@@ -44,6 +46,7 @@ const initialLists: ShoppingList[] = [
       { id: "3-2", name: "Post-its", completed: false },
     ],
     rotation: 1,
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -54,7 +57,8 @@ export default function Home() {
 
   useEffect(() => {
     setIsClient(true);
-    setLists(initialLists);
+    // For demo, let's add createdAt to initial lists if they don't have it.
+    setLists(initialLists.map(l => ({...l, createdAt: l.createdAt || new Date().toISOString() })));
   }, []);
 
   const addList = (name: string, color: string) => {
@@ -64,6 +68,7 @@ export default function Home() {
       color,
       items: [],
       rotation: Math.random() * 4 - 2, // -2 to 2 degrees
+      createdAt: new Date().toISOString(),
     };
     setLists((prev) => [...prev, newList]);
   };
@@ -150,7 +155,6 @@ export default function Home() {
                 onToggleItem={toggleItem}
                 onDeleteList={deleteList}
                 onUpdateListName={updateListName}
-                allPurchases={lists.flatMap(l => l.items.map(i => i.name))}
               />
             ))}
           </div>

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useRef, useTransition, useCallback } from "react";
-import type { ShoppingList, ShoppingItem } from "@/lib/types";
+import type { ShoppingList } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Sparkles, Loader2, Check, X, Pencil, Share2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Check, X, Pencil, Share2 } from "lucide-react";
 import { toPng } from 'html-to-image';
 import { ShoppingListExport } from "./shopping-list-export";
 
@@ -30,12 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { getSuggestions } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -55,7 +49,6 @@ interface ShoppingListCardProps {
   onToggleItem: (listId: string, itemId: string) => void;
   onDeleteList: (listId: string) => void;
   onUpdateListName: (listId: string, newName: string) => void;
-  allPurchases: string[];
 }
 
 export function ShoppingListCard({
@@ -65,11 +58,8 @@ export function ShoppingListCard({
   onToggleItem,
   onDeleteList,
   onUpdateListName,
-  allPurchases,
 }: ShoppingListCardProps) {
   const [isEditingName, setIsEditingName] = useState(false);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [isSuggesting, startSuggestionTransition] = useTransition();
   const [isExporting, startExportTransition] = useTransition();
   const { toast } = useToast();
   const exportRef = useRef<HTMLDivElement>(null);
@@ -93,20 +83,6 @@ export function ShoppingListCard({
   const handleNameUpdate = (data: z.infer<typeof listNameSchema>) => {
     onUpdateListName(list.id, data.name);
     setIsEditingName(false);
-  };
-
-  const handleGetSuggestions = () => {
-    startSuggestionTransition(async () => {
-      const result = await getSuggestions({ listName: list.name, pastPurchases: allPurchases });
-      if (result.length > 0) {
-        setSuggestions(result);
-      } else {
-        toast({
-          title: "Sem novas sugestões",
-          description: "Não encontramos nenhuma sugestão de item para esta lista no momento.",
-        });
-      }
-    });
   };
   
   const filter = (node: HTMLElement) => {
@@ -143,9 +119,15 @@ export function ShoppingListCard({
     })
   }, [exportRef, list.name, toast]);
 
+  const formattedDate = new Date(list.createdAt).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
   return (
     <>
-    <div className="absolute -left-[9999px] -top-[9999px]">
+    <div className="absolute -left-[9999px] top-0">
       <div ref={exportRef}>
         <ShoppingListExport list={list} />
       </div>
@@ -262,52 +244,15 @@ export function ShoppingListCard({
             </Button>
           </form>
         </Form>
-        <div className="flex gap-2 w-full">
-        <Popover onOpenChange={(open) => !open && setSuggestions([])}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-full bg-background/50"
-              onClick={handleGetSuggestions}
-              disabled={isSuggesting}
-            >
-              {isSuggesting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              Sugerir Itens
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <h4 className="font-medium leading-none">Sugestões de IA</h4>
-                <p className="text-sm text-muted-foreground">
-                  Itens que você pode querer adicionar.
-                </p>
-              </div>
-              <div className="grid gap-2">
-                {suggestions.map((suggestion, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <span className="text-lg">{suggestion}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onAddItem(list.id, suggestion)}
-                    >
-                      Adicionar
-                    </Button>
-                  </div>
-                ))}
-              </div>
+        <div className="flex gap-2 w-full justify-between items-center">
+            <div className="text-xs text-foreground/70">
+                <span className="font-medium">{formattedDate}</span>
+                <p>Data de criação</p>
             </div>
-          </PopoverContent>
-        </Popover>
-        <Button variant="outline" className="bg-background/50" onClick={handleExport} disabled={isExporting}>
-             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
-            Exportar
-        </Button>
+            <Button variant="outline" className="bg-background/50" onClick={handleExport} disabled={isExporting}>
+                {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
+                Exportar
+            </Button>
         </div>
       </CardFooter>
     </Card>

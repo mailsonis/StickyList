@@ -10,4 +10,5 @@ export type ShoppingList = {
   color: string;
   items: ShoppingItem[];
   rotation: number;
+  createdAt: string;
 };
