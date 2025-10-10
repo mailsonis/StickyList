@@ -1,7 +1,17 @@
 // src/firebase/auth/use-user.tsx
 "use client";
 import { useEffect, useState, createContext, useContext } from "react";
-import { getAuth, onAuthStateChanged, User, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    User, 
+    GoogleAuthProvider, 
+    signInWithPopup, 
+    signOut as firebaseSignOut,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updateProfile
+} from "firebase/auth";
 import { auth } from ".."; // Import auth from your firebase index
 
 interface UserContextType {
@@ -20,8 +30,6 @@ export const useUser = () => {
 };
 
 // This hook is designed to be used with the FirebaseProvider, which should wrap your app.
-// We are re-creating it here for simplicity of the example, but in a real app,
-// you would get the `auth` instance from the provider.
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,13 +57,39 @@ export const signInWithGoogle = async () => {
         await signInWithPopup(auth, provider);
     } catch (error) {
         console.error("Error signing in with Google: ", error);
+        throw error;
     }
 };
+
+export const signUpWithEmail = async (name: string, email: string, password: string) => {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        // Manually re-set user to trigger re-render with displayName
+        // This is a workaround as onAuthStateChanged might not fire immediately with the new profile
+        const updatedUser = { ...userCredential.user, displayName: name };
+        return updatedUser;
+    } catch (error) {
+        console.error("Error signing up with email: ", error);
+        throw error;
+    }
+};
+
+export const signInWithEmail = async (email: string, password: string) => {
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+        console.error("Error signing in with email: ", error);
+        throw error;
+    }
+};
+
 
 export const signOut = async () => {
     try {
         await firebaseSignOut(auth);
     } catch (error) {
         console.error("Error signing out: ", error);
+        throw error;
     }
 }
