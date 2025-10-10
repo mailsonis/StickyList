@@ -132,7 +132,7 @@ export default function LoginPage() {
                 {isSigningUp ? 'Crie sua Conta' : 'Acesse sua Conta'}
             </h1>
             <p className="text-muted-foreground mt-2">
-                {isSigningUp ? 'Preencha os campos para se registrar.' : 'Bem-vindo(a) de volta! Faça login para continuar.'}
+                {isSigningUp ? 'Preencha os campos para se registrar.' : 'Bem-vindo(a) ao StickyList! Faça login para continuar.'}
             </p>
         </div>
 
