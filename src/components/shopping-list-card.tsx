@@ -5,7 +5,7 @@ import type { ShoppingList } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Loader2, Check, X, Pencil, Share2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Check, X, Pencil, Download } from "lucide-react";
 import { toPng } from 'html-to-image';
 import { ShoppingListExport } from "./shopping-list-export";
 
@@ -246,11 +246,11 @@ export function ShoppingListCard({
         </Form>
         <div className="flex gap-2 w-full justify-between items-center">
             <div className="text-xs text-foreground/70">
+                <p>Criado em</p>
                 <span className="font-medium">{formattedDate}</span>
-                <p>Data de criação</p>
             </div>
             <Button variant="outline" className="bg-background/50" onClick={handleExport} disabled={isExporting}>
-                {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}
+                {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 Exportar
             </Button>
         </div>
