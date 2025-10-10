@@ -132,9 +132,9 @@ export default function Home() {
             Suas Listas
           </h1>
           <NewListDialog onListCreate={addList}>
-            <Button size="lg">
-              <Plus className="mr-2 h-5 w-5" />
-              Criar Nova Lista
+            <Button size="lg" className="md:w-auto w-12 h-12 md:h-11 md:px-8">
+              <Plus className="h-6 w-6 md:mr-2" />
+              <span className="hidden md:inline">Criar Nova Lista</span>
             </Button>
           </NewListDialog>
         </div>
