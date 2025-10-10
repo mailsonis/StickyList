@@ -2,12 +2,24 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read and write only their own data.
-    match /users/{userId}/lists/{listId} {
-      allow read, create, update, delete: if request.auth != null && request.auth.uid == userId && request.resource.data.owner == userId;
+
+    // Helper function to check if the user is the owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
     }
-    match /users/{userId}/lists {
-        allow list: if request.auth != null && request.auth.uid == userId;
+
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // A user can only access their own user document.
+      // In this app, we don't store public user profiles, so we can deny direct access.
+      allow read, write: if false;
+
+      // Rules for the 'lists' subcollection within each user's document
+      match /lists/{listId} {
+        // Allow read (get, list) and write (create, update, delete) operations
+        // only if the requesting user is the owner of the data.
+        allow read, write: if isOwner(userId);
+      }
     }
   }
 }
