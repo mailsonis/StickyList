@@ -2,12 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // A user can only manage their own shopping lists.
+    // Allow users to read and write only their own data.
     match /users/{userId}/lists/{listId} {
-      // Allow read, update, delete if the user is the owner.
-      allow read, update, delete: if request.auth.uid == userId;
-      // Allow create if the user is the owner and the owner field is set correctly.
-      allow create: if request.auth.uid == userId && request.resource.data.owner == request.auth.uid;
+      allow read, create, update, delete: if request.auth != null && request.auth.uid == userId && request.resource.data.owner == userId;
+    }
+    match /users/{userId}/lists {
+        allow list: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
