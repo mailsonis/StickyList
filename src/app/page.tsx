@@ -1,13 +1,16 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Loader2 } from "lucide-react";
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, writeBatch } from "firebase/firestore";
 
 import type { ShoppingList, ShoppingItem } from "@/lib/types";
 import { useUser } from "@/firebase/auth/use-user";
 import { useFirestore, useCollection } from "@/firebase/firestore/use-collection";
+import { errorEmitter } from "@/firebase/error-emitter";
+import { FirestorePermissionError } from "@/firebase/errors";
 
 import { AppHeader } from "@/components/header";
 import { ShoppingListCard } from "@/components/shopping-list-card";
@@ -39,18 +42,46 @@ export default function Home() {
       items: [],
       rotation: Math.random() * 4 - 2, // -2 to 2 degrees
       createdAt: serverTimestamp(),
+      owner: user.uid,
     };
-    await addDoc(collection(firestore, `users/${user.uid}/lists`), newList);
+    
+    addDoc(collection(firestore, `users/${user.uid}/lists`), newList)
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+          path: `users/${user.uid}/lists`,
+          operation: 'create',
+          requestResourceData: newList,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   const deleteList = async (listId: string) => {
     if (!user || !firestore) return;
-    await deleteDoc(doc(firestore, `users/${user.uid}/lists`, listId));
+    const listRef = doc(firestore, `users/${user.uid}/lists`, listId);
+    deleteDoc(listRef)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: listRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
   };
   
   const updateListName = async (listId: string, newName: string) => {
     if (!user || !firestore) return;
-    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { name: newName });
+    const listRef = doc(firestore, `users/${user.uid}/lists`, listId);
+    const updatedData = { name: newName };
+    updateDoc(listRef, updatedData)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: listRef.path,
+                operation: 'update',
+                requestResourceData: updatedData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
   };
 
   const addItem = async (listId: string, itemName: string) => {
@@ -66,7 +97,18 @@ export default function Home() {
     };
     
     const updatedItems = [...list.items, newItem];
-    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { items: updatedItems });
+    const listRef = doc(firestore, `users/${user.uid}/lists`, listId);
+    const updatedData = { items: updatedItems };
+
+    updateDoc(listRef, updatedData)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: listRef.path,
+                operation: 'update',
+                requestResourceData: updatedData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
   };
 
   const deleteItem = async (listId: string, itemId: string) => {
@@ -75,7 +117,17 @@ export default function Home() {
     if (!list) return;
 
     const updatedItems = list.items.filter((item) => item.id !== itemId);
-    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { items: updatedItems });
+    const listRef = doc(firestore, `users/${user.uid}/lists`, listId);
+    const updatedData = { items: updatedItems };
+    updateDoc(listRef, updatedData)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: listRef.path,
+                operation: 'update',
+                requestResourceData: updatedData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
   };
 
   const toggleItem = async (listId: string, itemId: string) => {
@@ -88,7 +140,17 @@ export default function Home() {
         ? { ...item, completed: !item.completed }
         : item
     );
-    await updateDoc(doc(firestore, `users/${user.uid}/lists`, listId), { items: updatedItems });
+    const listRef = doc(firestore, `users/${user.uid}/lists`, listId);
+    const updatedData = { items: updatedItems };
+    updateDoc(listRef, updatedData)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: listRef.path,
+                operation: 'update',
+                requestResourceData: updatedData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
   };
 
   if (!isClient || userLoading || !user) {

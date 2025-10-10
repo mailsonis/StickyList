@@ -13,4 +13,5 @@ export type ShoppingList = {
   items: ShoppingItem[];
   rotation: number;
   createdAt: Timestamp | { toDate: () => Date };
+  owner: string;
 };

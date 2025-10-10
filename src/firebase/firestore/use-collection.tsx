@@ -8,6 +8,8 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import { firestore } from "..";
+import { errorEmitter } from "../error-emitter";
+import { FirestorePermissionError } from "../errors";
 
 interface UseCollectionOptions<T> {
   // You can add options like 'where', 'orderBy', 'limit' here in the future
@@ -40,8 +42,12 @@ export const useCollection = <T extends DocumentData>(
         setLoading(false);
       },
       (err) => {
-        console.error(err);
-        setError(err);
+        const permissionError = new FirestorePermissionError({
+            path: query.path,
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        setError(permissionError);
         setLoading(false);
       }
     );
