@@ -5,7 +5,7 @@ import type { ShoppingList } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Loader2, Check, X, Pencil, Download } from "lucide-react";
+import { Plus, Trash2, Loader2, Check, X, Pencil, Download, Lightbulb } from "lucide-react";
 import { toPng } from 'html-to-image';
 import { ShoppingListExport } from "./shopping-list-export";
 
@@ -33,6 +33,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { SuggestionPopover } from "./suggestion-popover";
 
 const itemFormSchema = z.object({
   itemName: z.string().min(1, { message: "Item cannot be empty." }),
@@ -45,19 +46,21 @@ const listNameSchema = z.object({
 interface ShoppingListCardProps {
   list: ShoppingList;
   onAddItem: (listId: string, itemName: string) => void;
-  onDeleteItem: (listId: string, itemId: string) => void;
+  onDeleteItems: (listId: string, itemIds: string[]) => void;
   onToggleItem: (listId: string, itemId: string) => void;
   onDeleteList: (listId: string) => void;
   onUpdateListName: (listId: string, newName: string) => void;
+  onAddSuggestedItems: (listId: string, items: string[]) => void;
 }
 
 export function ShoppingListCard({
   list,
   onAddItem,
-  onDeleteItem,
+  onDeleteItems,
   onToggleItem,
   onDeleteList,
   onUpdateListName,
+  onAddSuggestedItems,
 }: ShoppingListCardProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isExporting, startExportTransition] = useTransition();
@@ -86,7 +89,7 @@ export function ShoppingListCard({
   };
   
   const filter = (node: HTMLElement) => {
-    const exclusionClasses = ['hidden'];
+    const exclusionClasses = ['hidden-export'];
     return !exclusionClasses.some((classname) => node.classList?.contains(classname));
   }
 
@@ -113,11 +116,22 @@ export function ShoppingListCard({
         toast({
             variant: "destructive",
             title: "Uh oh! Algo deu errado.",
-            description: "Não foi possível exportar a lista como imagem.",
+            description: "Não foi possível exportar la lista como imagem.",
         })
       }
     })
   }, [exportRef, list.name, toast]);
+
+  const handleDeleteCheckedItems = () => {
+    const itemsToDelete = list.items.filter(item => item.completed).map(item => item.id);
+    if (itemsToDelete.length === 0) {
+      toast({
+        description: "Nenhum item marcado para excluir.",
+      });
+      return;
+    }
+    onDeleteItems(list.id, itemsToDelete);
+  };
 
   const formattedDate = list.createdAt ? (list.createdAt as any).toDate().toLocaleDateString('pt-BR', {
     day: '2-digit',
@@ -125,6 +139,7 @@ export function ShoppingListCard({
     year: 'numeric',
   }) : '';
 
+  const hasCompletedItems = list.items.some(item => item.completed);
 
   return (
     <>
@@ -156,15 +171,15 @@ export function ShoppingListCard({
                     </FormItem>
                   )}
                 />
-                <Button type="submit" size="icon" variant="ghost" className="h-8 w-8"><Check className="h-5 w-5"/></Button>
-                <Button type="button" size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsEditingName(false)}><X className="h-5 w-5"/></Button>
+                <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 hidden-export"><Check className="h-5 w-5"/></Button>
+                <Button type="button" size="icon" variant="ghost" className="h-8 w-8 hidden-export" onClick={() => setIsEditingName(false)}><X className="h-5 w-5"/></Button>
               </form>
             </Form>
           ) : (
             <h2 className="text-3xl font-bold break-words">{list.name}</h2>
           )}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center hidden-export">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsEditingName(true)}>
                 <Pencil className="h-5 w-5" />
             </Button>
@@ -195,13 +210,13 @@ export function ShoppingListCard({
             {list.items.map((item) => (
               <li key={item.id} className="flex items-center gap-3 group">
                 <Checkbox
-                  id={`item-${item.id}`}
+                  id={`item-${list.id}-${item.id}`}
                   checked={item.completed}
                   onCheckedChange={() => onToggleItem(list.id, item.id)}
-                  className="h-6 w-6 rounded-md"
+                  className="h-6 w-6 rounded-md hidden-export"
                 />
                 <label
-                  htmlFor={`item-${item.id}`}
+                  htmlFor={`item-${list.id}-${item.id}`}
                   className={cn(
                     "flex-1 text-xl cursor-pointer transition-colors",
                     item.completed && "line-through text-muted-foreground"
@@ -212,8 +227,8 @@ export function ShoppingListCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-                  onClick={() => onDeleteItem(list.id, item.id)}
+                  className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hidden-export"
+                  onClick={() => onDeleteItems(list.id, [item.id])}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -234,23 +249,39 @@ export function ShoppingListCard({
               render={({ field }) => (
                 <FormItem className="flex-1">
                   <FormControl>
-                    <Input placeholder="Novo item..." {...field} className="bg-background/50"/>
+                    <Input placeholder="Novo item..." {...field} className="bg-background/50 border-foreground/20 focus:border-primary border-2"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" size="icon">
+            <Button type="submit" size="icon" className="hidden-export">
               <Plus />
             </Button>
+            <SuggestionPopover list={list} onAddSuggestedItems={onAddSuggestedItems}>
+                <Button type="button" size="icon" variant="outline" className="bg-background/50 hidden-export">
+                    <Lightbulb className="h-5 w-5 text-yellow-500" />
+                </Button>
+            </SuggestionPopover>
           </form>
         </Form>
-        <div className="flex gap-2 w-full justify-between items-center">
+        {hasCompletedItems && (
+            <Button 
+                variant="destructive" 
+                size="sm" 
+                className="w-full mt-2 hidden-export"
+                onClick={handleDeleteCheckedItems}
+            >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Excluir Itens Marcados
+            </Button>
+        )}
+        <div className="flex gap-2 w-full justify-between items-center mt-2">
             <div className="text-xs text-foreground/70">
                 <p>Criado em</p>
                 <span className="font-medium">{formattedDate}</span>
             </div>
-            <Button variant="outline" className="bg-background/50" onClick={handleExport} disabled={isExporting}>
+            <Button variant="outline" className="bg-background/50 hidden-export" onClick={handleExport} disabled={isExporting}>
                 {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 Exportar
             </Button>
