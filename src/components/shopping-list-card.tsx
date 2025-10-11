@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useTransition, useCallback } from "react";
@@ -46,7 +47,7 @@ const listNameSchema = z.object({
 interface ShoppingListCardProps {
   list: ShoppingList;
   onAddItem: (listId: string, itemName: string) => void;
-  onDeleteItems: (listId: string, itemIds: string[]) => void;
+  onDeleteItem: (listId: string, itemId: string) => void;
   onToggleItem: (listId: string, itemId: string) => void;
   onDeleteList: (listId: string) => void;
   onUpdateListName: (listId: string, newName: string) => void;
@@ -56,7 +57,7 @@ interface ShoppingListCardProps {
 export function ShoppingListCard({
   list,
   onAddItem,
-  onDeleteItems,
+  onDeleteItem,
   onToggleItem,
   onDeleteList,
   onUpdateListName,
@@ -130,7 +131,8 @@ export function ShoppingListCard({
       });
       return;
     }
-    onDeleteItems(list.id, itemsToDelete);
+    // onDeleteItems is not implemented in page.tsx to handle multiple items
+    itemsToDelete.forEach(itemId => onDeleteItem(list.id, itemId));
   };
 
   const formattedDate = list.createdAt ? (list.createdAt as any).toDate().toLocaleDateString('pt-BR', {
@@ -228,7 +230,7 @@ export function ShoppingListCard({
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hidden-export"
-                  onClick={() => onDeleteItems(list.id, [item.id])}
+                  onClick={() => onDeleteItem(list.id, item.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
