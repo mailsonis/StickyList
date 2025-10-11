@@ -13,7 +13,7 @@ import {
     updateProfile,
     sendPasswordResetEmail
 } from "firebase/auth";
-import { auth } from ".."; // Import auth from your firebase index
+import { useAuth } from "@/firebase";
 
 interface UserContextType {
   user: User | null;
@@ -32,17 +32,19 @@ export const useUser = () => {
 
 // This hook is designed to be used with the FirebaseProvider, which should wrap your app.
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+  const auth = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
   
   return (
     <UserContext.Provider value={{ user, loading }}>
@@ -53,6 +55,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
 
 export const signInWithGoogle = async () => {
+    const auth = getAuth();
     const provider = new GoogleAuthProvider();
     try {
         await signInWithPopup(auth, provider);
@@ -63,6 +66,7 @@ export const signInWithGoogle = async () => {
 };
 
 export const signUpWithEmail = async (name: string, email: string, password: string) => {
+    const auth = getAuth();
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(userCredential.user, { displayName: name });
@@ -77,6 +81,7 @@ export const signUpWithEmail = async (name: string, email: string, password: str
 };
 
 export const signInWithEmail = async (email: string, password: string) => {
+    const auth = getAuth();
     try {
         await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
@@ -86,6 +91,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 export const sendPasswordReset = async (email: string) => {
+    const auth = getAuth();
     try {
         await sendPasswordResetEmail(auth, email);
     } catch (error) {
@@ -96,6 +102,7 @@ export const sendPasswordReset = async (email: string) => {
 
 
 export const signOut = async () => {
+    const auth = getAuth();
     try {
         await firebaseSignOut(auth);
     } catch (error) {

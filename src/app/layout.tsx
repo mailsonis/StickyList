@@ -1,6 +1,6 @@
 import type {Metadata} from 'next';
 import { Toaster } from "@/components/ui/toaster"
-import { FirebaseProvider } from "@/firebase/provider";
+import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { UserProvider } from "@/firebase/auth/use-user";
 import './globals.css';
 
@@ -59,11 +59,11 @@ export default function RootLayout({
         <meta name="theme-color" content="#FFF8C6" />
       </head>
       <body className="font-body antialiased">
-        <FirebaseProvider>
+        <FirebaseClientProvider>
           <UserProvider>
             {children}
           </UserProvider>
-        </FirebaseProvider>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

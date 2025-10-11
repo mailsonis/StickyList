@@ -7,8 +7,7 @@ import { Plus, Loader2 } from "lucide-react";
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, writeBatch } from "firebase/firestore";
 
 import type { ShoppingList, ShoppingItem } from "@/lib/types";
-import { useUser } from "@/firebase/auth/use-user";
-import { useFirestore, useCollection } from "@/firebase/firestore/use-collection";
+import { useUser, useFirestore, useCollection } from "@/firebase";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError } from "@/firebase/errors";
 

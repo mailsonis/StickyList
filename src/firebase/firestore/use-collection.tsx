@@ -2,12 +2,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import {
-  collection,
   onSnapshot,
   Query,
   DocumentData,
 } from "firebase/firestore";
-import { firestore } from "..";
+import { useFirestore } from "@/firebase";
 import { errorEmitter } from "../error-emitter";
 import { FirestorePermissionError } from "../errors";
 
@@ -43,7 +42,7 @@ export const useCollection = <T extends DocumentData>(
       },
       (err) => {
         const permissionError = new FirestorePermissionError({
-            path: query.path,
+            path: (query as any)._query.path.segments.join('/'),
             operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
@@ -53,12 +52,8 @@ export const useCollection = <T extends DocumentData>(
     );
 
     return () => unsubscribe();
-  }, [query ? query.path : '']); // Re-run effect if query path changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query ? (query as any)._query.path.segments.join('/') : '']); // Re-run effect if query path changes
 
   return { data, loading, error };
 };
-
-// A helper from the previous implementation. In a real app, you'd get this from the provider.
-export const useFirestore = () => {
-    return firestore;
-}
