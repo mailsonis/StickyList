@@ -110,34 +110,6 @@ export default function Home() {
         });
   };
 
-  const addSuggestedItems = async (listId: string, items: string[]) => {
-    if (items.length === 0 || !user || !firestore || !lists) return;
-
-    const list = lists.find(l => l.id === listId);
-    if (!list) return;
-
-    const newItems: ShoppingItem[] = items.map(itemName => ({
-        id: `item-${Date.now()}-${Math.random()}`,
-        name: itemName,
-        completed: false,
-    }));
-
-    const updatedItems = [...list.items, ...newItems];
-    const listRef = doc(firestore, `users/${user.uid}/lists`, listId);
-    const updatedData = { items: updatedItems };
-
-    updateDoc(listRef, updatedData)
-        .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: listRef.path,
-                operation: 'update',
-                requestResourceData: updatedData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-  };
-
-
   const deleteItem = async (listId: string, itemId: string) => {
     if (!user || !firestore || !lists) return;
     const list = lists.find(l => l.id === listId);
@@ -223,7 +195,6 @@ export default function Home() {
                 onToggleItem={toggleItem}
                 onDeleteList={deleteList}
                 onUpdateListName={updateListName}
-                onAddSuggestedItems={addSuggestedItems}
               />
             ))}
           </div>

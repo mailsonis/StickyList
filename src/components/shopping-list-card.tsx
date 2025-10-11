@@ -6,7 +6,7 @@ import type { ShoppingList } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Plus, Trash2, Loader2, Check, X, Pencil, Download, Lightbulb } from "lucide-react";
+import { Plus, Trash2, Loader2, Check, X, Pencil, Download } from "lucide-react";
 import { toPng } from 'html-to-image';
 import { ShoppingListExport } from "./shopping-list-export";
 
@@ -34,7 +34,6 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { SuggestionPopover } from "./suggestion-popover";
 
 const itemFormSchema = z.object({
   itemName: z.string().min(1, { message: "Item cannot be empty." }),
@@ -51,7 +50,6 @@ interface ShoppingListCardProps {
   onToggleItem: (listId: string, itemId: string) => void;
   onDeleteList: (listId: string) => void;
   onUpdateListName: (listId: string, newName: string) => void;
-  onAddSuggestedItems: (listId: string, items: string[]) => void;
 }
 
 export function ShoppingListCard({
@@ -61,7 +59,6 @@ export function ShoppingListCard({
   onToggleItem,
   onDeleteList,
   onUpdateListName,
-  onAddSuggestedItems,
 }: ShoppingListCardProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isExporting, startExportTransition] = useTransition();
@@ -123,25 +120,11 @@ export function ShoppingListCard({
     })
   }, [exportRef, list.name, toast]);
 
-  const handleDeleteCheckedItems = () => {
-    const itemsToDelete = list.items.filter(item => item.completed).map(item => item.id);
-    if (itemsToDelete.length === 0) {
-      toast({
-        description: "Nenhum item marcado para excluir.",
-      });
-      return;
-    }
-    // onDeleteItems is not implemented in page.tsx to handle multiple items
-    itemsToDelete.forEach(itemId => onDeleteItem(list.id, itemId));
-  };
-
   const formattedDate = list.createdAt ? (list.createdAt as any).toDate().toLocaleDateString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   }) : '';
-
-  const hasCompletedItems = list.items.some(item => item.completed);
 
   return (
     <>
@@ -260,24 +243,8 @@ export function ShoppingListCard({
             <Button type="submit" size="icon" className="hidden-export">
               <Plus />
             </Button>
-            <SuggestionPopover list={list} onAddSuggestedItems={onAddSuggestedItems}>
-                <Button type="button" size="icon" variant="outline" className="bg-background/50 hidden-export">
-                    <Lightbulb className="h-5 w-5 text-yellow-500" />
-                </Button>
-            </SuggestionPopover>
           </form>
         </Form>
-        {hasCompletedItems && (
-            <Button 
-                variant="destructive" 
-                size="sm" 
-                className="w-full mt-2 hidden-export"
-                onClick={handleDeleteCheckedItems}
-            >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Excluir Itens Marcados
-            </Button>
-        )}
         <div className="flex gap-2 w-full justify-between items-center mt-2">
             <div className="text-xs text-foreground/70">
                 <p>Criado em</p>
