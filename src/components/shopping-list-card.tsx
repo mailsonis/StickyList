@@ -250,7 +250,7 @@ export function ShoppingListCard({
                 <p>Criado em</p>
                 <span className="font-medium">{formattedDate}</span>
             </div>
-            <Button variant="outline" className="bg-background/50 hidden-export" onClick={handleExport} disabled={isExporting}>
+            <Button variant="ghost" className="hidden-export text-foreground/70 hover:text-foreground" onClick={handleExport} disabled={isExporting}>
                 {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 Exportar
             </Button>
