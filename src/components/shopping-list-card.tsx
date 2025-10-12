@@ -234,7 +234,7 @@ export function ShoppingListCard({
               render={({ field }) => (
                 <FormItem className="flex-1">
                   <FormControl>
-                    <Input placeholder="Novo item..." {...field} className="bg-background/50 border-foreground/20 focus:border-primary border-2"/>
+                    <Input placeholder="Novo item..." {...field} className="bg-background/50 border-foreground/20 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 border-2"/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
