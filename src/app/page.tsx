@@ -218,7 +218,7 @@ export default function Home() {
         )}
       </main>
       <footer className="text-center p-4 text-muted-foreground text-sm">
-        <p>Feito com ❤️ por MailsonRG</p>
+        <p>Idealizado Por MailsonRG - Feito com ❤️ e IA</p>
       </footer>
     </div>
   );
