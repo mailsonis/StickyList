@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useRef, useTransition, useCallback } from "react";
-import type { ShoppingList } from "@/lib/types";
+import { useState, useRef, useTransition, useCallback, useEffect } from "react";
+import type { ShoppingList, ShoppingItem } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -43,6 +43,10 @@ const listNameSchema = z.object({
   name: z.string().min(1, { message: "O nome da lista não pode estar vazio." }),
 });
 
+const editItemNameSchema = z.object({
+  name: z.string().min(1, { message: "O nome do item não pode estar vazio." }),
+});
+
 interface ShoppingListCardProps {
   list: ShoppingList;
   onAddItem: (listId: string, itemName: string) => void;
@@ -50,6 +54,7 @@ interface ShoppingListCardProps {
   onToggleItem: (listId: string, itemId: string) => void;
   onDeleteList: (listId: string) => void;
   onUpdateListName: (listId: string, newName: string) => void;
+  onUpdateItemName: (listId: string, itemId: string, newName: string) => void;
 }
 
 export function ShoppingListCard({
@@ -59,8 +64,10 @@ export function ShoppingListCard({
   onToggleItem,
   onDeleteList,
   onUpdateListName,
+  onUpdateItemName,
 }: ShoppingListCardProps) {
   const [isEditingName, setIsEditingName] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [isExporting, startExportTransition] = useTransition();
   const { toast } = useToast();
   const exportRef = useRef<HTMLDivElement>(null);
@@ -76,6 +83,19 @@ export function ShoppingListCard({
     defaultValues: { name: list.name },
   });
 
+  const editItemForm = useForm({
+    resolver: zodResolver(editItemNameSchema),
+  });
+
+  useEffect(() => {
+    if (editingItemId) {
+      const item = list.items.find(i => i.id === editingItemId);
+      if (item) {
+        editItemForm.setValue('name', item.name);
+      }
+    }
+  }, [editingItemId, list.items, editItemForm]);
+
   const onSubmit = (data: z.infer<typeof itemFormSchema>) => {
     onAddItem(list.id, data.itemName);
     form.reset();
@@ -86,6 +106,13 @@ export function ShoppingListCard({
     setIsEditingName(false);
   };
   
+  const handleItemNameUpdate = (data: z.infer<typeof editItemNameSchema>) => {
+    if (editingItemId) {
+      onUpdateItemName(list.id, editingItemId, data.name);
+      setEditingItemId(null);
+    }
+  };
+
   const filter = (node: HTMLElement) => {
     const exclusionClasses = ['hidden-export'];
     return !exclusionClasses.some((classname) => node.classList?.contains(classname));
@@ -194,29 +221,61 @@ export function ShoppingListCard({
           <ul className="space-y-3">
             {list.items.map((item) => (
               <li key={item.id} className="flex items-center gap-3 group">
-                <Checkbox
-                  id={`item-${list.id}-${item.id}`}
-                  checked={item.completed}
-                  onCheckedChange={() => onToggleItem(list.id, item.id)}
-                  className="h-6 w-6 rounded-md hidden-export"
-                />
-                <label
-                  htmlFor={`item-${list.id}-${item.id}`}
-                  className={cn(
-                    "flex-1 text-xl cursor-pointer transition-colors",
-                    item.completed && "line-through text-muted-foreground"
-                  )}
-                >
-                  {item.name}
-                </label>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hidden-export"
-                  onClick={() => onDeleteItem(list.id, item.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {editingItemId === item.id ? (
+                  <Form {...editItemForm}>
+                    <form onSubmit={editItemForm.handleSubmit(handleItemNameUpdate)} className="flex items-center gap-2 w-full">
+                      <FormField
+                        control={editItemForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem className="flex-grow">
+                            <FormControl>
+                              <Input {...field} className="text-xl p-1 h-auto bg-transparent border-primary" autoFocus />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" size="icon" variant="ghost" className="h-8 w-8 hidden-export"><Check className="h-5 w-5"/></Button>
+                      <Button type="button" size="icon" variant="ghost" className="h-8 w-8 hidden-export" onClick={() => setEditingItemId(null)}><X className="h-5 w-5"/></Button>
+                    </form>
+                  </Form>
+                ) : (
+                  <>
+                    <Checkbox
+                      id={`item-${list.id}-${item.id}`}
+                      checked={item.completed}
+                      onCheckedChange={() => onToggleItem(list.id, item.id)}
+                      className="h-6 w-6 rounded-md hidden-export"
+                    />
+                    <label
+                      htmlFor={`item-${list.id}-${item.id}`}
+                      className={cn(
+                        "flex-1 text-xl cursor-pointer transition-colors",
+                        item.completed && "line-through text-muted-foreground"
+                      )}
+                    >
+                      {item.name}
+                    </label>
+                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity hidden-export">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full"
+                        onClick={() => setEditingItemId(item.id)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full text-destructive hover:text-destructive"
+                        onClick={() => onDeleteItem(list.id, item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>

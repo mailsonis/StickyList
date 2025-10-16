@@ -152,6 +152,28 @@ export default function Home() {
         });
   };
 
+  const updateItemName = async (listId: string, itemId: string, newName: string) => {
+    if (!user || !firestore || !lists) return;
+    const list = lists.find(l => l.id === listId);
+    if (!list) return;
+
+    const updatedItems = list.items.map((item) =>
+      item.id === itemId ? { ...item, name: newName } : item
+    );
+
+    const listRef = doc(firestore, `users/${user.uid}/lists`, listId);
+    const updatedData = { items: updatedItems };
+    updateDoc(listRef, updatedData)
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: listRef.path,
+                operation: 'update',
+                requestResourceData: updatedData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+  };
+
   if (!isClient || userLoading || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center">
@@ -195,6 +217,7 @@ export default function Home() {
                 onToggleItem={toggleItem}
                 onDeleteList={deleteList}
                 onUpdateListName={updateListName}
+                onUpdateItemName={updateItemName}
               />
             ))}
           </div>
