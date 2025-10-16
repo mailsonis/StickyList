@@ -85,6 +85,7 @@ export function ShoppingListCard({
 
   const editItemForm = useForm({
     resolver: zodResolver(editItemNameSchema),
+    defaultValues: { name: "" },
   });
 
   useEffect(() => {
@@ -319,3 +320,5 @@ export function ShoppingListCard({
     </>
   );
 }
+
+    
