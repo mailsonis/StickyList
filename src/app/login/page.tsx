@@ -146,7 +146,7 @@ export default function LoginPage() {
                         <FormItem>
                         <FormLabel>Nome</FormLabel>
                         <FormControl>
-                            <Input placeholder="Seu nome completo" {...field} className="border-foreground/20 focus:border-primary border-2"/>
+                            <Input placeholder="Seu nome completo" {...field} className="border-foreground/20 focus-visible:border-primary border-2 focus-visible:ring-0 focus-visible:ring-offset-0"/>
                         </FormControl>
                         <FormMessage />
                         </FormItem>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                     <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                        <Input type="email" placeholder="seu@email.com" {...field} className="border-foreground/20 focus:border-primary border-2"/>
+                        <Input type="email" placeholder="seu@email.com" {...field} className="border-foreground/20 focus-visible:border-primary border-2 focus-visible:ring-0 focus-visible:ring-offset-0"/>
                     </FormControl>
                     <FormMessage />
                     </FormItem>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                     <FormItem>
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} className="border-foreground/20 focus:border-primary border-2"/>
+                        <Input type="password" placeholder="••••••••" {...field} className="border-foreground/20 focus-visible:border-primary border-2 focus-visible:ring-0 focus-visible:ring-offset-0"/>
                     </FormControl>
                     <FormMessage />
                     </FormItem>
