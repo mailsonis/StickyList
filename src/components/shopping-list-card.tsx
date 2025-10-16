@@ -179,7 +179,7 @@ export function ShoppingListCard({
                   render={({ field }) => (
                     <FormItem className="flex-grow">
                       <FormControl>
-                        <Input {...field} className="text-2xl font-bold p-1 h-auto bg-transparent border-primary" autoFocus />
+                        <Input {...field} className="text-2xl font-bold p-1 h-auto bg-transparent border-primary focus-visible:ring-0 focus-visible:ring-offset-0" autoFocus />
                       </FormControl>
                     </FormItem>
                   )}
@@ -231,7 +231,7 @@ export function ShoppingListCard({
                         render={({ field }) => (
                           <FormItem className="flex-grow">
                             <FormControl>
-                              <Input {...field} className="text-xl p-1 h-auto bg-transparent border-primary" autoFocus />
+                              <Input {...field} className="text-xl p-1 h-auto bg-transparent border-primary focus-visible:ring-0 focus-visible:ring-offset-0" autoFocus />
                             </FormControl>
                           </FormItem>
                         )}
@@ -320,5 +320,3 @@ export function ShoppingListCard({
     </>
   );
 }
-
-    
