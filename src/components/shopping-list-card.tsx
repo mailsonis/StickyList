@@ -231,7 +231,7 @@ export function ShoppingListCard({
                         render={({ field }) => (
                           <FormItem className="flex-grow">
                             <FormControl>
-                              <Input {...field} className="text-xl p-1 h-auto bg-transparent border-primary focus-visible:ring-0 focus-visible:ring-offset-0" autoFocus />
+                              <Input {...field} className="text-xl p-1 h-auto bg-transparent border-primary focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary" autoFocus />
                             </FormControl>
                           </FormItem>
                         )}
@@ -266,14 +266,29 @@ export function ShoppingListCard({
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full text-destructive hover:text-destructive"
-                        onClick={() => onDeleteItem(list.id, item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                       <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 rounded-full text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação não pode ser desfeita. Isso excluirá permanentemente o item.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => onDeleteItem(list.id, item.id)}>Excluir</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </>
                 )}
