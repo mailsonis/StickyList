@@ -199,7 +199,7 @@ export default function Home() {
         </div>
 
         {listsLoading && (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="bg-gray-200 rounded-lg h-96 animate-pulse"></div>
             ))}
@@ -207,7 +207,7 @@ export default function Home() {
         )}
 
         {!listsLoading && lists && lists.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {lists.map((list) => (
               <ShoppingListCard
                 key={list.id}
