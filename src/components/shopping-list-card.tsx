@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import {
   AlertDialog,
@@ -56,6 +57,33 @@ interface ShoppingListCardProps {
   onUpdateListName: (listId: string, newName: string) => void;
   onUpdateItemName: (listId: string, itemId: string, newName: string) => void;
 }
+
+const FormattedText = ({ text }: { text: string }) => {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+
+  return (
+    <div className="whitespace-pre-wrap break-words">
+      {parts.map((part, index) => {
+        if (part.match(urlRegex)) {
+          return (
+            <a
+              key={index}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part}
+            </a>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </div>
+  );
+};
 
 export function ShoppingListCard({
   list,
@@ -221,7 +249,7 @@ export function ShoppingListCard({
         {list.items.length > 0 ? (
           <ul className="space-y-3">
             {list.items.map((item) => (
-              <li key={item.id} className="flex items-center gap-3 group">
+              <li key={item.id} className="flex items-start gap-3 group">
                 {editingItemId === item.id ? (
                   <Form {...editItemForm}>
                     <form onSubmit={editItemForm.handleSubmit(handleItemNameUpdate)} className="flex items-center gap-2 w-full">
@@ -231,7 +259,7 @@ export function ShoppingListCard({
                         render={({ field }) => (
                           <FormItem className="flex-grow">
                             <FormControl>
-                              <Input {...field} className="text-xl p-1 h-auto bg-transparent border-primary focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary" autoFocus />
+                              <Textarea {...field} className="text-xl p-1 h-auto bg-transparent border-primary focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-primary" autoFocus />
                             </FormControl>
                           </FormItem>
                         )}
@@ -246,17 +274,17 @@ export function ShoppingListCard({
                       id={`item-${list.id}-${item.id}`}
                       checked={item.completed}
                       onCheckedChange={() => onToggleItem(list.id, item.id)}
-                      className="h-6 w-6 rounded-md hidden-export"
+                      className="h-6 w-6 rounded-md hidden-export mt-1"
                     />
-                    <label
-                      htmlFor={`item-${list.id}-${item.id}`}
+                    <div
                       className={cn(
                         "flex-1 text-xl cursor-pointer transition-colors",
                         item.completed && "line-through text-muted-foreground"
                       )}
+                      onClick={() => !item.completed && setEditingItemId(item.id)}
                     >
-                      {item.name}
-                    </label>
+                      <FormattedText text={item.name} />
+                    </div>
                     <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity hidden-export">
                       <Button
                         variant="ghost"
@@ -335,3 +363,5 @@ export function ShoppingListCard({
     </>
   );
 }
+
+    

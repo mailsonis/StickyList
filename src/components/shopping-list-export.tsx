@@ -1,3 +1,4 @@
+
 "use client";
 import type { ShoppingList } from "@/lib/types";
 import { Check } from "lucide-react";
@@ -6,6 +7,14 @@ import { cn } from "@/lib/utils";
 interface ShoppingListExportProps {
     list: ShoppingList;
 }
+
+const FormattedText = ({ text }: { text: string }) => {
+    return (
+        <div className="whitespace-pre-wrap break-words">
+            {text}
+        </div>
+    );
+};
 
 export function ShoppingListExport({ list }: ShoppingListExportProps) {
     return (
@@ -25,11 +34,11 @@ export function ShoppingListExport({ list }: ShoppingListExportProps) {
                         </div>
                         <span
                             className={cn(
-                                "flex-1 text-2xl break-words",
+                                "flex-1 text-2xl",
                                 item.completed && "line-through text-muted-foreground"
                             )}
                         >
-                            {item.name}
+                            <FormattedText text={item.name} />
                         </span>
                     </li>
                 ))}
@@ -37,3 +46,5 @@ export function ShoppingListExport({ list }: ShoppingListExportProps) {
         </div>
     );
 }
+
+    
